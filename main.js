@@ -5,15 +5,22 @@ import { files } from './files';
 /** @type {import('@webcontainer/api').WebContainer}  */
 let webcontainerInstance;
 
+let helloFilePath = '/src/server/liveview/hello.ts'
+
 window.addEventListener('load', async () => {
-  textareaEl.value = files['index.js'].file.contents;
+  const helloContents = files['src']['directory']['server']['directory']['liveview']['directory']['hello.ts'].file.contents;
+  textareaEl.value = helloContents;
   textareaEl.addEventListener('input', (e) => {
     writeIndexJS(e.currentTarget.value);
   });
 
   // Call only once
   webcontainerInstance = await WebContainer.boot();
+  console.log("files", files)
   await webcontainerInstance.mount(files);
+
+  const ls = await webcontainerInstance.fs.readdir('/src/server/liveview');
+  console.log("ls", ls)
 
   const exitCode = await installDependencies();
   if (exitCode !== 0) {
@@ -37,7 +44,7 @@ async function installDependencies() {
 
 async function startDevServer() {
   // Run `npm run start` to start the Express app
-  await webcontainerInstance.spawn('npm', ['run', 'start']);
+  await webcontainerInstance.spawn('npm', ['run', 'dev']);
 
   // Wait for `server-ready` event
   webcontainerInstance.on('server-ready', (port, url) => {
@@ -50,7 +57,7 @@ async function startDevServer() {
  */
 
 async function writeIndexJS(content) {
-  await webcontainerInstance.fs.writeFile('/index.js', content);
+  await webcontainerInstance.fs.writeFile(helloFilePath, content);
 }
 
 document.querySelector('#app').innerHTML = `
